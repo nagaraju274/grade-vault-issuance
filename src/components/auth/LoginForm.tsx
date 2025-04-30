@@ -23,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z
@@ -37,6 +39,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const LoginForm = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -48,6 +51,7 @@ const LoginForm = () => {
 
   const onSubmit = (values: LoginFormValues) => {
     setIsLoading(true);
+    setLoginError("");
 
     // In a real application, this would be an API call
     setTimeout(() => {
@@ -83,15 +87,23 @@ const LoginForm = () => {
         },
       };
 
-      const user = userTypeMap[values.email.toLowerCase()];
+      const userEmail = values.email.toLowerCase();
+      const user = userTypeMap[userEmail];
 
       if (user && values.password === "password123") {
         // Store the user in localStorage (in a real app, store a JWT token instead)
         localStorage.setItem("user", JSON.stringify(user));
         toast.success(`Login successful as ${user.role}!`);
+        console.log("User logged in:", user);
         navigate("/dashboard");
       } else {
-        toast.error("Invalid email or password");
+        if (!user) {
+          setLoginError(`No account found with email: ${values.email}`);
+          toast.error("Email not found");
+        } else {
+          setLoginError("Incorrect password");
+          toast.error("Invalid password");
+        }
       }
     }, 1500);
   };
@@ -105,6 +117,12 @@ const LoginForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {loginError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{loginError}</AlertDescription>
+          </Alert>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -141,15 +159,18 @@ const LoginForm = () => {
       </CardContent>
       <CardFooter className="flex flex-col space-y-2">
         <div className="text-sm text-gray-500 text-center w-full">
-          <p>
-            Demo accounts: 
-            <br />
-            admin@example.com / password123
-            <br />
-            faculty@example.com / password123
-            <br />
-            student@example.com / password123
-          </p>
+          <p className="font-medium mb-1">Demo accounts:</p>
+          <div className="grid grid-cols-1 gap-1">
+            <div className="p-2 bg-gray-50 rounded">
+              <strong>Admin:</strong> admin@example.com / password123
+            </div>
+            <div className="p-2 bg-gray-50 rounded">
+              <strong>Faculty:</strong> faculty@example.com / password123
+            </div>
+            <div className="p-2 bg-gray-50 rounded">
+              <strong>Student:</strong> student@example.com / password123
+            </div>
+          </div>
         </div>
       </CardFooter>
     </Card>
