@@ -83,12 +83,12 @@ const LoginForm = () => {
         },
       };
 
-      const user = userTypeMap[values.email];
+      const user = userTypeMap[values.email.toLowerCase()];
 
       if (user && values.password === "password123") {
         // Store the user in localStorage (in a real app, store a JWT token instead)
         localStorage.setItem("user", JSON.stringify(user));
-        toast.success("Login successful!");
+        toast.success(`Login successful as ${user.role}!`);
         navigate("/dashboard");
       } else {
         toast.error("Invalid email or password");
